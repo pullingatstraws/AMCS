@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AMCS · Ocean Texture Generator</title>
+<title>AMCS · Ocean Data Visualiser</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
@@ -880,7 +880,7 @@ function updateStatus(source, live) {
 function updateSliderLabels() {
   document.getElementById('densityVal').textContent  = document.getElementById('density').value;
   document.getElementById('lengthVal').textContent   = document.getElementById('length').value;
-  document.getElementById('weightVal').textContent   = (document.getElementById('weight').value / 10).toFixed(1) + 'px';
+  document.getElementById('weightVal').textContent   = (document.getElementById('weight').value / 10).toFixed(2) + 'px';
   document.getElementById('opacityVal').textContent  = document.getElementById('opacity').value + '%';
   document.getElementById('zoneCountVal').textContent = document.getElementById('zoneCount').value;
   document.getElementById('zoneIntVal').textContent  = document.getElementById('zoneIntensity').value + '%';
