@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AMCS · Ocean Texture Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=gambetta@400,401,500,501&display=swap">
+<style>
+:root{
+  --lagoon:#006673;
+  --lagoon-deep:#004f59;
+  --coral:#FBECDE;
+  --eyre:#1D1D20;
+  --bondi:#D29C81;
+  --ember:#D4502A;
+  --kelp:#2A7255;
+  --serif:'Gambetta','Source Serif 4',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--sans);background:var(--eyre);color:var(--coral)}
+
+.app{display:grid;grid-template-columns:320px 1fr;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{
+  background:var(--eyre);
+  border-right:1px solid rgba(251,236,222,0.14);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sidebar-header{
+  padding:26px 24px 20px;
+  border-bottom:1px solid rgba(251,236,222,0.14);
+  flex-shrink:0;
+}
+.brand-row{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.brand-row .mark{width:26px;height:auto;flex-shrink:0}
+.brand-row .mark path{fill:var(--coral);opacity:0.9}
+.sidebar-header h1{
+  font-family:var(--sans);
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:var(--coral);
+  opacity:0.5;
+}
+.sidebar-header h2{
+  font-family:var(--serif);
+  font-size:22px;
+  font-weight:400;
+  font-style:italic;
+  color:var(--coral);
+  letter-spacing:0.002em;
+  line-height:1.15;
+}
+.coords-readout{
+  margin-top:14px;
+  font-family:var(--sans);
+  font-size:10px;
+  letter-spacing:0.1em;
+  color:var(--coral);
+  opacity:0.4;
+  font-variant-numeric:tabular-nums;
+}
+.sidebar-scroll{
+  flex:1;overflow-y:auto;padding:0 24px 24px;
+}
+.sidebar-scroll::-webkit-scrollbar{width:3px}
+.sidebar-scroll::-webkit-scrollbar-track{background:transparent}
+.sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(251,236,222,0.2)}
+
+.section{
+  padding:20px 0;
+  border-bottom:1px solid rgba(251,236,222,0.08);
+}
+.section:last-child{border-bottom:none}
+.section-label{
+  font-family:var(--sans);
+  font-size:9px;
+  font-weight:500;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--coral);
+  opacity:0.42;
+  margin-bottom:14px;
+}
+
+/* Controls */
+select,input[type="text"]{
+  width:100%;
+  padding:9px 10px;
+  background:rgba(251,236,222,0.05);
+  border:1px solid rgba(251,236,222,0.18);
+  color:var(--coral);
+  font-family:var(--sans);
+  font-size:12px;
+  border-radius:0;
+  outline:none;
+  margin-bottom:7px;
+  -webkit-appearance:none;
+}
+select:focus,input[type="text"]:focus{
+  border-color:rgba(251,236,222,0.4);
+}
+select option{background:var(--eyre)}
+
+.custom-coords{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.custom-coords input::placeholder{color:var(--coral);opacity:0.35;font-family:var(--sans)}
+
+.btn{
+  width:100%;padding:10px 12px;
+  background:transparent;
+  border:1px solid rgba(251,236,222,0.22);
+  color:var(--coral);
+  font-family:var(--sans);
+  font-size:10.5px;
+  font-weight:500;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  border-radius:0;
+  cursor:pointer;
+  transition:background 0.15s,border-color 0.15s;
+  margin-bottom:7px;
+}
+.btn:hover{background:rgba(251,236,222,0.08);border-color:rgba(251,236,222,0.4)}
+.btn:active{background:rgba(251,236,222,0.14)}
+.btn-primary{
+  background:var(--lagoon);
+  border-color:var(--lagoon);
+  color:var(--coral);
+}
+.btn-primary:hover{background:var(--lagoon-deep);border-color:var(--lagoon-deep)}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+
+/* Range sliders */
+.slider-group{margin-bottom:12px}
+.slider-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.slider-row label{font-family:var(--sans);font-size:11px;color:var(--coral);opacity:0.72}
+.slider-row span{font-family:var(--sans);font-size:10px;color:var(--coral);opacity:0.42;font-variant-numeric:tabular-nums;min-width:32px;text-align:right}
+input[type="range"]{
+  width:100%;
+  -webkit-appearance:none;
+  height:1px;
+  background:rgba(251,236,222,0.2);
+  border-radius:0;
+  outline:none;
+  cursor:pointer;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:9px;height:9px;
+  background:var(--coral);
+  border-radius:50%;
+  margin-top:-4px;
+}
+input[type="range"]::-moz-range-thumb{
+  width:9px;height:9px;
+  background:var(--coral);
+  border:none;border-radius:50%;
+}
+
+/* Seed display */
+.seed-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;
+  background:rgba(251,236,222,0.04);
+  border:1px solid rgba(251,236,222,0.12);
+  border-radius:0;
+  margin-bottom:9px;
+}
+.seed-row .seed-label{font-family:var(--sans);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;opacity:0.42}
+.seed-row .seed-val{font-family:var(--sans);font-size:11px;font-variant-numeric:tabular-nums;opacity:0.7}
+
+/* Status */
+.status{
+  font-family:var(--sans);
+  font-size:10px;
+  line-height:1.8;
+  letter-spacing:0.02em;
+  opacity:0.48;
+  padding:9px 10px;
+  background:rgba(251,236,222,0.03);
+  border-left:1px solid rgba(251,236,222,0.15);
+}
+.status.live{opacity:0.7}
+.status .dot{
+  display:inline-block;width:5px;height:5px;
+  border-radius:50%;background:var(--kelp);
+  margin-right:5px;vertical-align:middle;
+}
+.status .dot.fallback{background:var(--bondi)}
+
+.warn{
+  font-family:var(--sans);
+  font-size:10px;padding:8px 10px;
+  background:rgba(212,80,42,0.14);
+  border:1px solid rgba(212,80,42,0.3);
+  border-radius:0;color:var(--ember);
+  margin-bottom:9px;display:none;
+  letter-spacing:0.02em;
+}
+
+/* Viewport */
+.viewport{position:relative;overflow:hidden;background:var(--lagoon)}
+canvas{display:block;width:100%;height:100%}
+
+.viewport-overlay{
+  position:absolute;top:16px;right:16px;
+  display:flex;gap:8px;
+}
+.overlay-btn{
+  padding:6px 12px;
+  background:rgba(29,29,32,0.6);
+  border:1px solid rgba(251,236,222,0.2);
+  color:var(--coral);
+  font-size:10px;letter-spacing:0.08em;
+  border-radius:3px;cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:background 0.15s;
+}
+.overlay-btn:hover{background:rgba(29,29,32,0.85)}
+
+.loading{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,102,115,0.7);
+  font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--coral);opacity:0;
+  pointer-events:none;
+  transition:opacity 0.2s;
+}
+.loading.active{opacity:1;pointer-events:all}
+
+/* Field character — editorial signature panel */
+#mood{
+  font-family:var(--sans);
+  font-size:10px;
+  line-height:1.9;
+  letter-spacing:0.02em;
+  opacity:0.55;
+  padding:14px 0 2px;
+  border-top:1px solid rgba(251,236,222,0.1);
+}
+#mood strong{
+  display:block;
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:400;
+  font-size:19px;
+  letter-spacing:0.002em;
+  line-height:1.3;
+  opacity:1;
+  margin-bottom:10px;
+}
+
+/* Viewport chrome */
+.viewport-overlay{
+  font-family:var(--sans);
+}
+.overlay-btn{
+  border-radius:0;
+  font-weight:500;
+  letter-spacing:0.09em;
+}
+.loading{
+  font-family:var(--serif);
+  font-style:italic;
+  font-weight:400;
+  text-transform:none;
+  letter-spacing:0.01em;
+  font-size:16px;
+}
+
+.viewport-coords{
+  position:absolute;bottom:16px;right:18px;
+  font-family:var(--sans);
+  font-size:10px;
+  letter-spacing:0.1em;
+  color:var(--coral);
+  opacity:0.55;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  pointer-events:none;
+  text-shadow:0 1px 6px rgba(0,0,0,0.35);
+}
+.viewport-caption{
+  position:absolute;bottom:16px;left:18px;
+  font-family:var(--serif);
+  font-style:italic;
+  font-size:13px;
+  color:var(--coral);
+  opacity:0.75;
+  pointer-events:none;
+  text-shadow:0 1px 6px rgba(0,0,0,0.35);
+}
+
+@media (max-width:720px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .sidebar{border-right:none;border-bottom:1px solid rgba(251,236,222,0.14);max-height:46vh}
+  .viewport-caption{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-row">
+        <svg class="mark" viewBox="0 0 227.65 179.03" xmlns="http://www.w3.org/2000/svg">
+          <path d="M216.92,84.07c1.35-1.19,2.66-2.73,3.93-4.71,2.76-4.55,4.65-9.44,5.64-14.35,2.54-9.51.86-20.17-4.72-28.8-7.52-12.71-26.18-22.32-40.76-20.99-3.52.35-6.89,1.44-10.15,2.61-2.32.53-4.55,1.26-6.5,2.25-6.23,1.85-11.71.32-18-1.45-1.2-.34-2.43-.68-3.69-1.01h-.04c-9.98-2.17-15.52-.02-19.98,1.71-3.34,1.29-5.98,2.32-9.71,1.54-2.82-.74-5.71-3.16-8.51-5.49-1.21-1.01-2.36-1.96-3.49-2.79C91.72,5.32,79.7,1.13,65.23.14c-4.7-.37-9.7.01-14.87,1.15-12.07,2.72-24.02,9.47-34.55,19.56-4.83,4.88-8.74,11.22-11.92,19.35-5.11,12.13-5.18,26.91-.2,41.63,2.02,5.41,4.87,10.82,8.74,16.54,2.71,4.02,6.21,7.43,9.55,10.58,4.11,3.84,8.92,6.36,13.05,8.3,5.82,3,12.27,4.97,19.17,5.86,6.46.84,13.21.09,19.54-.84h.06c.68-.15,1.37-.3,2.06-.44,5.96-1.27,12.12-2.59,17.54-.37.45.49.97.97,1.58,1.46,3.38,2.57,6.17,3.79,8.42,4.22,2.78,1.94,5.12,3.97,7.01,6.08l.07.08c2.6,2.97,4.33,6.65,6.16,10.78,3.1,7.38,7.19,13.73,12.13,18.89,2.12,2.25,4.57,4.28,7.27,6.01,3.98,2.58,8.65,5.47,13.71,7.23,3.64,1.29,7.54,2.14,11.65,2.55,3.82.38,7.82.37,11.98-.02,8.82-.66,17.34-3.71,24.65-8.82,9.7-6.18,17.12-15.53,20.89-26.31,3.44-9.79,3.52-21.34.32-33.17-.83-5.05-2.21-9.21-4.14-12.54-1.15-4.62-.84-8.45.9-12.03.3-.6.61-1.2.94-1.79ZM217.26,110.92c.81,5.03,1.06,11,.77,17.96v.12c-1.04,15.71-7.29,26.57-21.6,37.46-6.33,4.84-14.74,7.72-26.46,9.06-11.53,1.44-26.02-4.13-34.35-10.35-7.22-5.81-12.52-12.52-15.76-19.97-.82-1.75-3.32-7.07-3.09-10.09v-.05c.07-2.34,1.62-3.79,5.32-4.96,1.16.11,2.37.09,3.59-.11,5.72-.75,10.94-2.9,15.08-6.2,4-3.13,8.47-7.02,11.38-12.22,3.42-5.48,5.05-11.81,4.72-18.28-.01-.45-.03-.88-.06-1.31.39-1.39.92-2.34,1.8-2.62.3-.06.67-.04,1.06.04,8.25,5.38,17.84,7.28,24.8,7.88,4.39.34,13.63-.39,18.46-4.02,3.21-.29,6.22.31,8.67,3.05.56.7,1.08,1.45,1.57,2.26.45,1.74,1.04,3.38,1.65,4.87.97,2.49,1.79,4.98,2.46,7.46ZM57.88,118.94h-.12c-5.2-.44-10.61-1.6-16.49-3.52-9.03-3.29-17.52-9.69-25.94-19.57-4.73-6.19-8.11-13.98-10.63-24.53-1.53-6.59-.74-13.36.35-19.71,2.14-13.25,10.11-25.92,21.86-34.75,7.19-5.53,14.75-9.34,22.49-11.33,10.68-2.9,22.47-2.06,34.11,2.44,4.54,1.64,9.24,3.33,13.4,5.85,8.52,5.03,12.83,10.41,13.19,16.48.12,1.27.04,2.6-.13,3.97-3.42,4.97-4.08,15.8-1.56,20.39.09.19.19.37.29.56-.24,2.04-1.14,3.68-2.39,5.12-5.82,1.3-10.62,6.59-14.35,11.43-4.35,5.76-6.87,11.66-7.49,17.54-.34,2.06-.41,4.12-.22,6.17.08,3.07.43,6.22,1.05,9.41.24,1.4.57,2.65.96,3.73,0,.54-.03,1.09-.11,1.62-.67,4.28-4.1,6.98-10.53,8.27-5.99,1.43-12.3.96-17.74.43ZM138.58,19.86h.12c6.11.65,13.6,2.56,14.69,8.06.09.97-.02,1.98-.28,3.02-2.02,1.98-3.73,5.18-5.02,8.13-3.08,7.07-4.45,13.38-4.19,19.31.02.36.04.73.06,1.1.04.8.08,1.64.16,2.49-.07.32-.15.61-.25.89-.31.81-.71,1.22-2.04,1.2-.48-.04-.99-.1-1.51-.19-3.69-2.36-8.47-4.28-11.88-4.77-1.22-.85-2.25-1.77-2.97-2.72-.74-.91-1.37-1.97-1.93-3.12.22-3.24-.99-6.76-2.04-9.8-.17-.49-.33-.97-.49-1.43l-.2-.5c-1.18-2.96-2.46-5.82-4.02-7.62-.52-3.2.17-5.97,2.05-8.25,4.15-5.02,13.11-6.53,19.74-5.79ZM153.96,96.3c-.91,6.22-2.17,14.74-10.23,21.27l-.04.04c-5.26,4.77-12.34,8.18-21.64,10.44h-.05s-.06.03-.09.04c-1.53-.22-2.9-.77-3.93-1.61-1.31-1.07-2-2.53-2.04-4.32.02-5.81,2.24-11.65,4.39-17.3l.09-.24c2.23-5.1,4.69-9.19,7.5-12.49,2.23-2.49,4.34-4.63,6.31-6.4.13-.11.27-.22.4-.33,1.36-1.15,2.97-2.48,4.7-3.63,2.88-1.84,5.41-2.68,7.56-2.51,2.17.18,3.95,1.37,5.41,3.64l.05.09c1.35,2.23,2.14,5.12,2.39,8.83-.33,1.31-.56,2.83-.8,4.49ZM130.33,71.81c-2.16-.61-4.18-1.69-5.57-3.51l-.08-.1c-.18-.23-.34-.46-.49-.69.76-1.12.86-2.48.29-3.87-.17-.4-.39-.8-.65-1.18.75-1.01,2.13-1.53,3.88-1.44,1.28.85,2.75,1.65,4.37,2.37,2.45,1.09,5.12,1.92,7.48,2.36,1.61,1.06,2.94,2.18,3.7,3.25.45.72.57,1.29.35,1.69-.15.27-.44.52-.87.74-3.86-.19-8.4-.39-12.41.37ZM111.32,38.47c.21-1.18.42-2.33.58-3.45.23-.29.48-.54.73-.75.51-.33.87-.29,1.13-.21.38.12.77.38,1.15.75.14.7.33,1.41.56,2.14.58,1.88,1.29,3.78,1.98,5.61.65,1.73,1.32,3.52,1.88,5.3.63,1.94,1.31,3.93,2.16,5.76-.17,1.27-.63,2.45-1.52,3.46l-.07.07c-1.09,1.13-2.4,1.58-3.87,1.34-1.94-.31-3.98-1.79-5.25-3.73.17-1.87.02-3.79-.12-5.65-.14-1.78-.28-3.63-.13-5.35.16-1.77.48-3.55.79-5.27ZM115.21,61.66c.03-.13.08-.26.14-.38.47-.57,1.19-.8,2.15-.67,1.37.18,2.88,1.04,3.94,2.12-.42,1.31-.34,2.79.22,4.26-.43.14-.93.14-1.46.04-1.15-2.32-2.88-4.16-5-5.37ZM149.67,68.55c-.07.15-.14.3-.2.45-.06-.02-.13-.04-.19-.06h-.03c-2.16-1.12-2.82-3.98-3.09-6.87.27-1.41.36-3.03.44-4.6.04-.76.08-1.47.13-2.18.23-4.39,1.07-8.11,2.57-11.39l.02-.04c.59-1.46,1.42-2.99,2.3-4.62,1.29-2.38,2.6-4.82,3.31-7.25.91-.77,1.76-1.1,2.53-.91.09.02.19.05.28.09.19,1.98.76,4.14,1.29,6.11l.07.24c1.16,4.14,1.46,7.49.96,10.56-.56,3.72-1.9,7.44-3.88,10.73-.77,1.26-1.77,2.62-2.74,3.94-1.42,1.94-2.9,3.94-3.77,5.8ZM88.27,108.26c-.04-2.11-.49-4.22-.92-6.27-.33-1.56-.64-3.04-.79-4.51v-.08c-.14-.68-.24-1.36-.3-2.05-.04-1.88.02-3.72.19-5.52,0-.05,0-.11.02-.16,1.04-6.41,4.84-12.91,11.34-19.43l.03-.03c1.34-1.46,3.07-2.75,4.74-4.01,1.67-1.25,3.37-2.53,4.78-4.01,1.07-.18,2.16-.19,3.28,0,.92.14,1.79.39,2.6.74.37,1.77,1.79,3.53,3.51,4.71.67.46,1.34.81,2,1.06.21.51.39,1.04.54,1.6l.03.11c.87,3,.7,6.26-.03,9.44-.93,1.61-1.71,3.34-2.48,5.04-.93,2.06-1.82,4.01-2.92,5.75l-.04.06c-3.76,6.9-9.47,13.13-17.47,19.07-.9.71-1.68,1.41-2.33,2.08-1,.27-1.9.28-2.66.03-1.31-.43-2.35-1.64-3.12-3.6ZM203.57,89.53c-.32.67-.81,1.28-1.43,1.82-2.31.28-4.64.92-6.85,1.54-.86.24-1.68.46-2.45.66-6.61,1.43-13.15,1.32-18.94-.33-2.87-.72-5.95-2.27-8.67-3.63-.71-.35-1.39-.7-2.07-1.02-.85-.4-1.77-.78-2.67-1.01-.95-.63-1.87-1.31-2.77-2.04-2.72-2.41-5.71-5.52-4.67-8.28h0c.91-1.73,3.08-2.54,5.36-3,1.05-.03,2.11-.07,3.14-.12,2.36-.1,4.81-.21,7.1-.1,4.06.27,8.28.97,12.52,2.07,5.11,1.41,9.93,3.56,14.74,6.57,1.81,1.13,3.68,2.19,5.58,3.01,1.42,1.23,2.36,2.56,2.1,3.86ZM95.15,113.61c2.22-.73,4.71-2.37,7.44-4.91,4.34-3.58,8.37-8.17,12.32-14.06,2.5-3.96,5.11-8.98,6.33-14.14,1.4-2.36,3.11-4.35,5.66-5.52l.09-.04c1-.47,2.1-.81,3.27-1.06,2.2.56,4.47.71,6.43.68,2.12-.05,4.61-.3,6.44-1.08.4.02.79.04,1.16.05.27.01.53.03.79.04,1.08.05,2.03.09,2.86.31-.72.97-3.81,2.72-5.55,3.7-1.49.84-2.91,1.64-3.98,2.4-.98.61-1.99,1.33-3.03,2.14-.96.75-1.89,1.55-2.78,2.36-14.76,12.29-17.26,22.32-19.09,29.67-1.08,4.33-1.93,7.75-4.94,10.25-1.31.9-2.85,1.07-4.41.82-2.66-1.82-5.67-3.55-9.03-5.19-.17-.08-.34-.16-.51-.24-.77-.92-1.14-1.81-1.14-2.69,0-1.06.56-2.22,1.69-3.49ZM194.84,79.34c-.25-.12-.49-.24-.71-.35-11.56-5.7-21.97-8.09-31.87-7.31l-.51.06c-1.12.13-2.36.27-3.6.51-.65.02-1.29.02-1.91.02h-.41c-1.77-.06-4.19-.12-4.67-.9-.05-.09-.09-.2-.1-.32,2.02-.35,4.11-1.95,6.07-4.72,3.56-5.26,5.74-11.97,6.48-19.97.52-6.45-.72-13.69-3.92-16.31,0-.21,0-.41.01-.6v-.04c.04-2.22.94-4.07,2.74-5.66.77-.68,1.68-1.28,2.7-1.8.26-.08.51-.16.77-.25,1.4-.45,2.82-.96,4.19-1.46.42-.15.84-.3,1.27-.46,5.82-1.34,12.53-1.46,16.87-1.04h.13c7.97.62,14.94,3.05,20.72,7.23,5.77,4.17,10.23,10,13.25,17.32l.02.04c3.02,6.4,3.62,14.24,1.95,21.96-.35,1.17-.76,2.32-1.24,3.44l-.02.04c-1.25,3.31-3.21,6.5-5.1,9.58-.9,1.46-1.81,2.96-2.66,4.47-3.86,3.23-8.05,3.12-12.72,1.15-2.35-1.97-5.55-3.55-7.75-4.63Z"/>
+        </svg>
+        <h1>AMCS · Brand Tools</h1>
+      </div>
+      <h2>Ocean Texture<br>Generator</h2>
+      <div class="coords-readout" id="coordsReadout">— </div>
+    </div>
+
+    <div class="sidebar-scroll">
+
+      <div class="section">
+        <div class="section-label">Location</div>
+        <select id="location"></select>
+        <div class="custom-coords">
+          <input type="text" id="lat" placeholder="Latitude">
+          <input type="text" id="lon" placeholder="Longitude">
+        </div>
+        <button class="btn" id="customBtn">Load coordinates</button>
+        <div id="warn" class="warn">API unavailable — using procedural fallback</div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Ocean</div>
+        <div class="btn-row">
+          <button class="btn" id="randomOcean">Random location</button>
+          <button class="btn" id="refresh">Refresh data</button>
+        </div>
+        <div id="status" class="status"><span class="dot fallback"></span>Loading…</div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Composition</div>
+        <div class="seed-row">
+          <span class="seed-label">Seed</span>
+          <span class="seed-val" id="seedLabel">—</span>
+        </div>
+        <button class="btn btn-primary" id="randomSeed">Regenerate field</button>
+
+        <div class="slider-group">
+          <div class="slider-row"><label>Density</label><span id="densityVal">—</span></div>
+          <input type="range" id="density" min="200" max="2800" value="950">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Line length</label><span id="lengthVal">—</span></div>
+          <input type="range" id="length" min="60" max="500" value="230">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Stroke weight</label><span id="weightVal">—</span></div>
+          <input type="range" id="weight" min="2" max="8" value="3">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Opacity</label><span id="opacityVal">—</span></div>
+          <input type="range" id="opacity" min="20" max="85" value="50">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Field disturbance</div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Zone count</label><span id="zoneCountVal">—</span></div>
+          <input type="range" id="zoneCount" min="0" max="10" value="4">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Zone intensity</label><span id="zoneIntVal">—</span></div>
+          <input type="range" id="zoneIntensity" min="0" max="100" value="50">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Zone radius</label><span id="zoneRadVal">—</span></div>
+          <input type="range" id="zoneRadius" min="60" max="400" value="180">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Motion speed</label><span id="motionSpeedVal">2.0×</span></div>
+          <input type="range" id="motionSpeed" min="0" max="500" value="200">
+        </div>
+        <div class="slider-group">
+          <div class="slider-row"><label>Field smoothing</label><span id="smoothVal">—</span></div>
+          <input type="range" id="smooth" min="0" max="100" value="30">
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Field character</div>
+        <div id="mood" class="status"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-label">Export</div>
+        <button class="btn btn-primary" id="exportBtn">Export SVG</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="viewport" id="viewport">
+    <canvas id="canvas"></canvas>
+    <div class="viewport-overlay">
+      <button class="overlay-btn" id="toggleBg">Toggle background</button><button class="overlay-btn" id="zoomBtn">Zoom: 1×</button>
+    </div>
+    <div class="viewport-caption" id="viewportCaption">Live Ocean Data</div>
+    <div class="viewport-coords" id="viewportCoords">— </div>
+    <div class="loading" id="loading">Reading the current…</div>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// PALETTE
+// ─────────────────────────────────────────────
+const PALETTE = {
+  lagoon:     '#006673',
+  coral:      '#FBECDE',
+  eyre:       '#1D1D20',
+  bondi:      '#D29C81',
+  ember:      '#D4502A',
+  kelp:       '#2A7255'
+};
+
+// ─────────────────────────────────────────────
+// LOCATIONS
+// Each entry: [label, lat, lon]
+// ─────────────────────────────────────────────
+const LOCATIONS = [
+  ['Sydney Shelf — EAC Core',       -33.85,  151.30],
+  ['Eden Shelf — EAC Separation',   -37.06,  149.95],
+  ['Lord Howe Rise',                -31.50,  159.20],
+  ['Capricorn Channel',             -23.15,  151.90],
+  ['Coral Sea Plateau',             -18.50,  154.00],
+  ['Ningaloo Coast — Leeuwin',      -22.75,  113.75],
+  ['Cape Leeuwin — Leeuwin/AAC',    -34.40,  115.10],
+  ['Fremantle Shelf',               -32.05,  115.30],
+  ['Indonesian Throughflow — Timor', -10.00, 124.00],
+  ['Banda Sea',                      -5.00,  128.00],
+  ['Antarctic Circumpolar — South',  -54.00, 130.00],
+  ['Heard Island',                   -53.10,  73.50],
+  ['Flinders Current — GAB',         -33.50,  130.00],
+  ['Spencer Gulf',                   -34.50,  137.00],
+  ['Torres Strait',                  -10.50,  142.20],
+  ['Tasman Sea Centre',              -40.00,  160.00],
+];
+
+const FALLBACK = {
+  currentVelocity: 0.35,
+  currentDirection: 22,
+  waveHeight: 1.2,
+  waveDirection: 48,
+  wavePeriod: 8,
+  swellDirection: 60
+};
+
+// ─────────────────────────────────────────────
+// STATE & GEOMETRY CACHE
+// ─────────────────────────────────────────────
+let seed       = Math.floor(Math.random() * 1e7);
+let currentLoc = LOCATIONS[0];
+let marine     = { ...FALLBACK };
+let influence  = 0;
+let svgPaths   = [];
+let flowZones  = [];
+let bgIsLagoon = true;
+let cachedPaths = []; // System-wide coordinate cache for high FPS animation
+let zoomLevel = 1;
+const zoomLevels = [1,2,4,'drift'];
+
+const canvas   = document.getElementById('canvas');
+const ctx      = canvas.getContext('2d');
+const viewport = document.getElementById('viewport');
+const locationSelect = document.getElementById('location');
+
+// ─────────────────────────────────────────────
+// POPULATE LOCATION DROPDOWN
+// ─────────────────────────────────────────────
+LOCATIONS.forEach((l, i) => {
+  const o = document.createElement('option');
+  o.value = i; o.textContent = l[0];
+  locationSelect.appendChild(o);
+});
+
+// ─────────────────────────────────────────────
+// RESIZE
+// ─────────────────────────────────────────────
+function resize() {
+  canvas.width  = viewport.clientWidth;
+  canvas.height = viewport.clientHeight;
+  generateFlowZones();
+  generatePaths(); // Geometry generation separated from render loop
+  render();
+}
+window.addEventListener('resize', resize);
+
+// ─────────────────────────────────────────────
+// DETERMINISTIC HASH NOISE (seeded)
+// ─────────────────────────────────────────────
+function rand(n) {
+  const x = Math.sin(n) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Value noise with smooth interpolation
+function noise(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y);
+  const xf = x - xi, yf = y - yi;
+  const a = rand(xi * 127 + yi * 311 + seed);
+  const b = rand((xi + 1) * 127 + yi * 311 + seed);
+  const c = rand(xi * 127 + (yi + 1) * 311 + seed);
+  const d = rand((xi + 1) * 127 + (yi + 1) * 311 + seed);
+  const ux = xf * xf * (3 - 2 * xf);
+  const uy = yf * yf * (3 - 2 * yf);
+  return ((a * (1 - ux) + b * ux) * (1 - uy)) + ((c * (1 - ux) + d * ux) * uy);
+}
+
+// Multi-octave noise for richer field structure
+function fbm(x, y, octaves = 3) {
+  let v = 0, amp = 0.5, freq = 1, total = 0;
+  for (let o = 0; o < octaves; o++) {
+    v     += noise(x * freq, y * freq) * amp;
+    total += amp;
+    amp   *= 0.5;
+    freq  *= 2.1;
+  }
+  return v / total;
+}
+
+// ─────────────────────────────────────────────
+// FLOW ZONE GENERATION
+// ─────────────────────────────────────────────
+
+function generateFlowZones() {
+  flowZones = [];
+
+  let angleDiff = Math.abs(marine.currentDirection - marine.waveDirection) % 180;
+  if (angleDiff > 90) angleDiff = 180 - angleDiff;
+
+  const shear = angleDiff / 90;
+  const turbulence = Math.min((marine.currentVelocity * marine.waveHeight) / 1.5, 2);
+
+  const sliderCount     = parseInt(document.getElementById('zoneCount').value);
+  const sliderIntensity = parseInt(document.getElementById('zoneIntensity').value) / 100;
+
+  const derivedCount = Math.max(1, Math.round((shear * 4) + (turbulence * 3)));
+  const count = Math.min(sliderCount, derivedCount + Math.floor(sliderCount * 0.5));
+
+  for (let i = 0; i < count; i++) {
+    const x = ((i + 1) / (count + 1)) * canvas.width;
+    const y = (0.2 + (rand(seed + i * 71) * 0.6)) * canvas.height;
+
+    const radius =
+      parseInt(document.getElementById('zoneRadius').value) *
+      (0.7 + turbulence * 0.4);
+
+    const swellDelta =
+      Math.abs(marine.swellDirection - marine.waveDirection) % 180;
+
+    const offset =
+      (shear * 45) +
+      (swellDelta * 0.25) *
+      (i % 2 === 0 ? 1 : -1);
+
+    const strength =
+      Math.min(1, (shear + turbulence) * 0.5) *
+      sliderIntensity;
+
+    flowZones.push({ x, y, radius, offset, strength });
+  }
+}
+
+
+// ─────────────────────────────────────────────
+// VECTOR FIELD
+// ─────────────────────────────────────────────
+function field(x, y) {
+  const smoothing = parseInt(document.getElementById('smooth').value) / 100;
+
+  const periodNorm = Math.max(0, Math.min(1, (marine.wavePeriod - 4) / 11));
+  const velocityNorm = Math.min(marine.currentVelocity / 1.5, 1);
+
+  const scale = 0.012 - periodNorm * 0.009;
+  const coherence = 0.25 + velocityNorm * 0.75;
+
+  const base = marine.currentDirection * Math.PI / 180;
+  const wave = marine.waveDirection * Math.PI / 180;
+
+  const angleDiff = Math.abs(marine.currentDirection - marine.waveDirection) % 180;
+  const shear = Math.min(angleDiff, 180 - angleDiff) / 90;
+
+  const noiseAmt =
+    (0.65 - coherence * 0.45) *
+    (1.2 - periodNorm * 0.5) *
+    (1 + shear * 0.5);
+
+  let angle =
+    base * 0.70 +
+    wave * 0.30 +
+    (fbm(x * scale, y * scale) - 0.5) * noiseAmt;
+
+  for (const zone of flowZones) {
+    const dx   = x - zone.x;
+    const dy   = y - zone.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < zone.radius && dist > 1) {
+      const t          = dist / zone.radius;
+      const influence  = Math.exp(-t * t * 2.5) * zone.strength;
+      const secondary  = angle + (zone.offset * Math.PI / 180);
+      angle            = angle * (1 - influence) + secondary * influence;
+    }
+  }
+
+  return { x: Math.cos(angle), y: Math.sin(angle) * 0.52 };
+}
+
+// ─────────────────────────────────────────────
+// RK4 INTEGRATION
+// ─────────────────────────────────────────────
+function rk4(x, y, h) {
+  const k1 = field(x, y);
+  const k2 = field(x + k1.x * h / 2, y + k1.y * h / 2);
+  const k3 = field(x + k2.x * h / 2, y + k2.y * h / 2);
+  const k4 = field(x + k3.x * h,     y + k3.y * h);
+  return [
+    x + h * (k1.x + 2 * k2.x + 2 * k3.x + k4.x) / 6,
+    y + h * (k1.y + 2 * k2.y + 2 * k3.y + k4.y) / 6
+  ];
+}
+
+// ─────────────────────────────────────────────
+// STRATIFIED GRID SEEDING
+// ─────────────────────────────────────────────
+function buildSeedGrid(count) {
+  const aspect = canvas.width / canvas.height;
+  const cols   = Math.round(Math.sqrt(count * aspect));
+  const rows   = Math.round(count / cols);
+  const cw     = canvas.width  / cols;
+  const ch     = canvas.height / rows;
+  const pts    = [];
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      const jx  = rand(seed + idx * 13 + 1) * cw;
+      const jy  = rand(seed + idx * 29 + 2) * ch;
+      pts.push([c * cw + jx, r * ch + jy]);
+    }
+  }
+  return pts;
+}
+
+// ─────────────────────────────────────────────
+// SMOOTH SVG PATH
+// ─────────────────────────────────────────────
+function ptsToBezier(pts) {
+  if (pts.length < 2) return '';
+  let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+    const my = (pts[i][1] + pts[i + 1][1]) / 2;
+    d += ` Q ${pts[i][0].toFixed(2)} ${pts[i][1].toFixed(2)} ${mx.toFixed(2)} ${my.toFixed(2)}`;
+  }
+  const last = pts[pts.length - 1];
+  d += ` L ${last[0].toFixed(2)} ${last[1].toFixed(2)}`;
+  return d;
+}
+
+// ─────────────────────────────────────────────
+// GEOMETRY GENERATOR (Isolates field math)
+// ─────────────────────────────────────────────
+function generatePaths() {
+  cachedPaths = [];
+  svgPaths = [];
+  if (!canvas.width) return;
+
+  const count   = parseInt(document.getElementById('density').value);
+  const maxSteps = Math.floor(parseInt(document.getElementById('length').value) * (0.7 + Math.min(marine.currentVelocity,1.5)*0.6));
+  const seeds   = buildSeedGrid(count);
+
+  for (const [sx, sy] of seeds) {
+    let x = sx, y = sy;
+    const pts = [[x, y]];
+
+    for (let s = 0; s < maxSteps; s++) {
+      [x, y] = rk4(x, y, 2);
+      if (x < -10 || y < -10 || x > canvas.width + 10 || y > canvas.height + 10) break;
+      pts.push([x, y]);
+    }
+
+    if (pts.length < 6) continue;
+
+    cachedPaths.push({
+      pts,
+      phase: rand(seed + sx * 17 + sy * 31) * Math.PI * 2
+    });
+
+    svgPaths.push(ptsToBezier(pts));
+  }
+}
+
+// ─────────────────────────────────────────────
+// DRAWING STEP
+// ─────────────────────────────────────────────
+function drawAnimatedPath(pathObj, time) {
+  const pts = pathObj.pts;
+  const speedMultiplier = parseInt(document.getElementById('motionSpeed')?.value || 100) / 100;
+  const speed = (0.05 + marine.currentVelocity * 0.25) * speedMultiplier;
+  const energy = marine.currentVelocity * marine.waveHeight;
+  const frequency = 1 + energy * 0.6;
+
+  const pulse = (Math.sin(time * speed * frequency + pathObj.phase) * 0.5 + 0.5);
+  const visibleLength = 0.12 + pulse * (0.45 + Math.min(marine.currentVelocity,1.2) * 0.25);
+  const maxIndex = Math.max(2, Math.floor((pts.length - 1) * visibleLength));
+
+  ctx.beginPath();
+  ctx.moveTo(pts[0][0], pts[0][1]);
+
+  for (let i = 1; i < maxIndex; i++) {
+    ctx.lineTo(pts[i][0], pts[i][1]);
+  }
+  ctx.stroke();
+}
+
+// ─────────────────────────────────────────────
+// RENDER (Runs every frame—pure lightweight drawing)
+// ─────────────────────────────────────────────
+function render() {
+  if (!canvas.width) return;
+
+  const bg     = bgIsLagoon ? PALETTE.lagoon : PALETTE.coral;
+  const stroke = bgIsLagoon ? PALETTE.coral  : PALETTE.lagoon;
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const driftMode = zoomLevel === 'drift';
+  const z = driftMode ? 2.5 : zoomLevel;
+
+  ctx.save();
+
+  let cameraX = 0;
+  let cameraY = 0;
+
+  if(driftMode){
+    const tt = performance.now()*0.001;
+    cameraX = Math.sin(tt*0.05)*120;
+    cameraY = Math.cos(tt*0.04)*90;
+  }
+
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.scale(z,z);
+  ctx.translate(-canvas.width/2 + cameraX, -canvas.height/2 + cameraY);
+
+  ctx.strokeStyle   = stroke;
+  ctx.lineWidth     = document.getElementById('weight').value / 10;
+  ctx.globalAlpha   = document.getElementById('opacity').value / 100;
+  ctx.lineCap       = 'round';
+  ctx.lineJoin      = 'round';
+
+  const t = performance.now() * 0.001;
+  for (const path of cachedPaths) {
+    drawAnimatedPath(path, t);
+  }
+
+  ctx.restore();
+  ctx.globalAlpha = 1;
+  updateMood();
+  updateSliderLabels();
+}
+
+// ─────────────────────────────────────────────
+// UI UPDATES
+// ─────────────────────────────────────────────
+
+function updateMood() {
+  let angleDiff = Math.abs(marine.currentDirection - marine.waveDirection) % 180;
+  if (angleDiff > 90) angleDiff = 180 - angleDiff;
+
+  const energy = marine.currentVelocity * marine.waveHeight;
+  const swellDelta = Math.abs(marine.swellDirection - marine.waveDirection) % 180;
+
+  const flowType =
+    angleDiff < 15 ? 'Aligned Flow' :
+    angleDiff < 35 ? 'Drift Flow' :
+    angleDiff < 60 ? 'Sheared Flow' :
+    'Cross-current Flow';
+
+  const energyState =
+    energy < 0.3 ? 'Low Energy' :
+    energy < 0.8 ? 'Moderate Energy' :
+    energy < 1.5 ? 'Active' :
+    'High Energy';
+
+  const structure =
+    swellDelta < 20 ? 'Coherent' :
+    swellDelta < 45 ? 'Layered' :
+    swellDelta < 70 ? 'Braided' :
+    'Rotational';
+
+  const signatureMap = {
+    'Aligned Flow|Coherent':'Coastal Conveyor Field',
+    'Drift Flow|Layered':'Shelf Drift Field',
+    'Sheared Flow|Braided':'Tasman Shear Field',
+    'Cross-current Flow|Rotational':'Rotational Boundary Field'
+  };
+  const signature = signatureMap[flowType + '|' + structure] || `${flowType.split(' ')[0]} ${structure} Field`;
+
+  document.getElementById('mood').innerHTML =
+    `<strong>${signature}</strong><br>` +
+    `Flow Type: ${flowType}<br>` +
+    `Energy: ${energyState}<br>` +
+    `Structure: ${structure}<br>` +
+    `Data Influence: ${Math.round(influence * 100)}%`;
+}
+
+
+function updateStatus(source, live) {
+  const dot = live ? '<span class="dot"></span>' : '<span class="dot fallback"></span>';
+  document.getElementById('status').className = 'status' + (live ? ' live' : '');
+  document.getElementById('status').innerHTML =
+    `${dot}${source}<br>` +
+    `API influence: ${Math.round(influence * 100)}%`;
+}
+
+function updateSliderLabels() {
+  document.getElementById('densityVal').textContent  = document.getElementById('density').value;
+  document.getElementById('lengthVal').textContent   = document.getElementById('length').value;
+  document.getElementById('weightVal').textContent   = (document.getElementById('weight').value / 10).toFixed(1) + 'px';
+  document.getElementById('opacityVal').textContent  = document.getElementById('opacity').value + '%';
+  document.getElementById('zoneCountVal').textContent = document.getElementById('zoneCount').value;
+  document.getElementById('zoneIntVal').textContent  = document.getElementById('zoneIntensity').value + '%';
+  document.getElementById('zoneRadVal').textContent  = document.getElementById('zoneRadius').value;
+  document.getElementById('smoothVal').textContent   = document.getElementById('smooth').value + '%';
+  const ms = document.getElementById('motionSpeed');
+  if (ms) document.getElementById('motionSpeedVal').textContent = (ms.value / 100).toFixed(1) + '×';
+}
+
+// ─────────────────────────────────────────────
+// COORDINATE READOUT — mirrors the print system's
+// bottom-corner geo-tag convention
+// ─────────────────────────────────────────────
+function formatCoord(lat, lon) {
+  const ns = lat >= 0 ? 'N' : 'S';
+  const ew = lon >= 0 ? 'E' : 'W';
+  return `${Math.abs(lat).toFixed(4)}° ${ns}   ${Math.abs(lon).toFixed(4)}° ${ew}`;
+}
+
+function updateCoords(lat, lon, label) {
+  const txt = formatCoord(lat, lon);
+  document.getElementById('coordsReadout').textContent = txt;
+  document.getElementById('viewportCoords').textContent = txt;
+  if (label) document.getElementById('viewportCaption').textContent = label;
+}
+
+// ─────────────────────────────────────────────
+// DATA FETCH — Open-Meteo Marine API
+// ─────────────────────────────────────────────
+async function fetchMarine(lat, lon) {
+  updateCoords(lat, lon, currentLoc[0]);
+  document.getElementById('loading').classList.add('active');
+  try {
+    const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}` +
+      `&hourly=wave_height,wave_direction,wave_period,ocean_current_velocity,` +
+      `ocean_current_direction,swell_wave_direction`;
+
+    const data = await fetch(url).then(r => r.json());
+    const h = data.hourly || {};
+    const i = Math.max((h.time?.length || 1) - 1, 0);
+
+    let score = 0;
+    ['wave_height','wave_direction','wave_period',
+     'ocean_current_velocity','ocean_current_direction','swell_wave_direction'
+    ].forEach(k => { if (Array.isArray(h[k])) score++; });
+    influence = score / 6;
+
+    marine = {
+      currentVelocity:  h.ocean_current_velocity ?.[i] ?? FALLBACK.currentVelocity,
+      currentDirection: h.ocean_current_direction?.[i] ?? FALLBACK.currentDirection,
+      waveHeight:       h.wave_height            ?.[i] ?? FALLBACK.waveHeight,
+      waveDirection:    h.wave_direction         ?.[i] ?? FALLBACK.waveDirection,
+      wavePeriod:       h.wave_period            ?.[i] ?? FALLBACK.wavePeriod,
+      swellDirection:   h.swell_wave_direction   ?.[i] ?? FALLBACK.swellDirection
+    };
+
+    document.getElementById('warn').style.display = 'none';
+    updateStatus('Live data · Open-Meteo Marine', true);
+
+  } catch(e) {
+    marine = { ...FALLBACK };
+    influence = 0;
+    document.getElementById('warn').style.display = 'block';
+    updateStatus('Procedural fallback', false);
+  }
+
+  generateFlowZones();
+  generatePaths();
+  render();
+  document.getElementById('loading').classList.remove('active');
+}
+
+// ─────────────────────────────────────────────
+// EVENT WIRING
+// ─────────────────────────────────────────────
+document.getElementById('seedLabel').textContent = seed;
+
+document.getElementById('randomSeed').onclick = () => {
+  seed = Math.floor(Math.random() * 1e7);
+  document.getElementById('seedLabel').textContent = seed;
+  generateFlowZones();
+  generatePaths();
+  render();
+};
+
+document.getElementById('randomOcean').onclick = () => {
+  const i = Math.floor(Math.random() * LOCATIONS.length);
+  currentLoc = LOCATIONS[i];
+  locationSelect.value = i;
+  fetchMarine(currentLoc[1], currentLoc[2]);
+};
+
+document.getElementById('refresh').onclick = () =>
+  fetchMarine(currentLoc[1], currentLoc[2]);
+
+locationSelect.onchange = () => {
+  currentLoc = LOCATIONS[+locationSelect.value];
+  fetchMarine(currentLoc[1], currentLoc[2]);
+};
+
+document.getElementById('customBtn').onclick = () => {
+  const lat = parseFloat(document.getElementById('lat').value);
+  const lon = parseFloat(document.getElementById('lon').value);
+  if (!isNaN(lat) && !isNaN(lon)) {
+    currentLoc = [`${lat.toFixed(2)}, ${lon.toFixed(2)}`, lat, lon];
+    fetchMarine(lat, lon);
+  }
+};
+
+
+document.getElementById('zoomBtn').onclick = () => {
+  let idx = zoomLevels.indexOf(zoomLevel);
+  idx = (idx + 1) % zoomLevels.length;
+  zoomLevel = zoomLevels[idx];
+  document.getElementById('zoomBtn').textContent =
+    zoomLevel === 'drift' ? 'Zoom: Drift' : `Zoom: ${zoomLevel}×`;
+  render();
+};
+
+document.getElementById('toggleBg').onclick = () => {
+  bgIsLagoon = !bgIsLagoon;
+  render();
+};
+
+// Structural changes -> recalculate everything
+['zoneCount','zoneIntensity','zoneRadius'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    generateFlowZones();
+    generatePaths();
+    render();
+  });
+});
+
+['density','length','smooth'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    generatePaths();
+    render();
+  });
+});
+
+// Styling changes -> redraw vector coordinates instantly without complex calculations
+['weight','opacity','motionSpeed'].forEach(id => {
+  document.getElementById(id).addEventListener('input', render);
+});
+
+// ─────────────────────────────────────────────
+// SVG EXPORT
+// ─────────────────────────────────────────────
+document.getElementById('exportBtn').onclick = () => {
+  const bg     = bgIsLagoon ? PALETTE.lagoon : PALETTE.coral;
+  const stroke = bgIsLagoon ? PALETTE.coral  : PALETTE.lagoon;
+  const w      = document.getElementById('weight').value / 10;
+  const op     = document.getElementById('opacity').value / 100;
+  const name   = (currentLoc[0] || 'custom').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+  const exportTimestamp = new Date().toISOString();
+
+  const metadata = `
+Location: ${currentLoc[0] || 'Custom'}
+Timestamp: ${exportTimestamp}
+Seed: ${seed}
+Current Velocity: ${marine.currentVelocity}
+Current Direction: ${marine.currentDirection}
+Wave Height: ${marine.waveHeight}
+Wave Direction: ${marine.waveDirection}
+Wave Period: ${marine.wavePeriod}
+Swell Direction: ${marine.swellDirection}
+API Influence: ${Math.round(influence*100)}%
+  `.trim();
+
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${canvas.width} ${canvas.height}">`;
+  svg += `<metadata><![CDATA[${metadata}]]></metadata>`;
+  svg += `<desc>${currentLoc[0] || 'Custom'} · ${exportTimestamp}</desc>`;
+  svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="${bg}"/>`;
+  svgPaths.forEach(p => {
+    svg += `<path d="${p}" fill="none" stroke="${stroke}" stroke-width="${w}" opacity="${op}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  });
+  svg += `</svg>`;
+
+  const a = document.createElement('a');
+  a.href     = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+  a.download = `amcs-texture-${name}-${seed}.svg`;
+  a.click();
+};
+
+// ─────────────────────────────────────────────
+// LOOP INIT
+// ─────────────────────────────────────────────
+function animate(){
+  render();
+  requestAnimationFrame(animate);
+}
+
+updateSliderLabels();
+resize();
+fetchMarine(currentLoc[1], currentLoc[2]);
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
